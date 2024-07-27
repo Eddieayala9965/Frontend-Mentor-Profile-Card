@@ -40,3 +40,12 @@ class Profile(Base):
     
     class SocialMediaLink(Base):
         __tablename__ = 'social_media_links'
+        
+        id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+        url = Column(String)
+        
+        profiles = relationship("Profile",
+                                 
+            secondary=user_social_media_links,
+                back_populates="social_media_links"
+        )
