@@ -7,7 +7,7 @@ class SocialMediaLink(BaseModel):
     id: uuid.UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ProfileBase(BaseModel):
     bio: Optional[str] = None
@@ -26,7 +26,7 @@ class Profile(ProfileBase):
     social_media_links: List[SocialMediaLink] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserBase(BaseModel):
     username: str
@@ -43,7 +43,7 @@ class User(UserBase):
     profiles: List[Profile] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str

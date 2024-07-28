@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import uuid
@@ -18,7 +18,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 router = APIRouter(
-    prefox="/users", 
+    prefix="/users",
     tags=["users"]
 )
 
@@ -26,13 +26,13 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
-    else :
+    else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(db: Session = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
+async def get_current_user(db: AsyncSession = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
@@ -51,15 +51,15 @@ async def get_current_user(db: Session = Depends(database.get_db), token: str = 
         raise credentials_exception
     return user
 
-@router.post("/register",response_model=schemas.User)
-async def register(user: schemas.UserCreate, db:Session = Depends(database.get_db)):
+@router.post("/register", response_model=schemas.User)
+async def register(user: schemas.UserCreate, db: AsyncSession = Depends(database.get_db)):
     db_user = await crud.get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
     return await crud.create_user(db=db, user=user)
 
 @router.post("/token", response_model=schemas.Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(database.get_db)):
     user = await crud.get_user_by_username(db, username=form_data.username)
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -78,10 +78,10 @@ async def get_user(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 @router.put("/update_user", response_model=schemas.User)
-async def update_user(user: schemas.UserUpdate, db: Session = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
+async def update_user(user: schemas.UserUpdate, db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     return await crud.update_user(db=db, user=user, user_id=current_user.id)
 
 @router.delete("/delete_user", response_model=None)
-async def delete_user(db: Session = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
+async def delete_user(db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     await crud.delete_user(db=db, user_id=current_user.id)
     return {"message": "User deleted successfully"}
