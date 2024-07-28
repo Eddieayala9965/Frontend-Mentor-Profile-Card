@@ -19,7 +19,7 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    profiles = relationship("Profile" , back_populates="user")
+    profiles = relationship("Profile" , back_populates="owner")
 
 class Profile(Base):
     __tablename__ = 'profiles'
