@@ -37,6 +37,9 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
 
 class User(UserBase):
     id: uuid.UUID

@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 from . import models, schemas, security
@@ -51,9 +52,24 @@ async def update_user(db: AsyncSession, user: schemas.UserUpdate, user_id: uuid.
 async def delete_user(db: AsyncSession, user_id: uuid.UUID):
     db_user = await get_user(db, user_id)
     if db_user:
+        # First, delete associated social media links
+        await db.execute(
+            delete(models.user_social_media_links).where(models.user_social_media_links.c.profile_id.in_(
+                select(models.Profile.id).where(models.Profile.owner_id == user_id)
+            ))
+        )
+        await db.commit()
+        
+        # Then delete associated profiles
+        await db.execute(
+            delete(models.Profile).where(models.Profile.owner_id == user_id)
+        )
+        await db.commit()
+        
+        # Now delete the user
         await db.delete(db_user)
         await db.commit()
-
+        
 async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_id: uuid.UUID):
     # Convert dictionaries to SocialMediaLink instances with URLs as strings
     social_media_links = [

@@ -77,11 +77,14 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 async def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
-@router.put("/update_user", response_model=schemas.User)
-async def update_user(user: schemas.UserUpdate, db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
-    return await crud.update_user(db=db, user=user, user_id=current_user.id)
+@router.put("/update_user/{user_id}", response_model=schemas.User)
+async def update_user(user_id: uuid.UUID, user: schemas.UserUpdate, db: AsyncSession = Depends(database.get_db)):
+    return await crud.update_user(db=db, user=user, user_id=user_id)
 
-@router.delete("/delete_user", response_model=None)
-async def delete_user(db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
-    await crud.delete_user(db=db, user_id=current_user.id)
+
+@router.delete("/delete_user/{user_id}", response_model=None)
+async def delete_user(user_id: uuid.UUID, db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
+    if user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Operation not allowed")
+    await crud.delete_user(db=db, user_id=user_id)
     return {"message": "User deleted successfully"}

@@ -27,7 +27,6 @@ async def update_profile(profile_id: uuid.UUID, profile: schemas.ProfileUpdate, 
         raise HTTPException(status_code=404, detail="Profile not found")
     return db_profile
 
-@router.delete("/delete_profile/{profile_id}", response_model=None)
-async def delete_profile(profile_id: uuid.UUID, db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
-    await crud.delete_profile(db=db, profile_id=profile_id)
-    return {"message": "Profile deleted successfully"}
+
+
+
