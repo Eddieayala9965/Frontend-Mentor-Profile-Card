@@ -73,15 +73,15 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.get("/get_user", response_model=schemas.User)
-async def get_user(current_user: schemas.User = Depends(get_current_user)):
+@router.get("/me", response_model=schemas.User)
+async def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
-@router.put("/update_user", response_model=schemas.User)
+@router.put("/me", response_model=schemas.User)
 async def update_user(user: schemas.UserUpdate, db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     return await crud.update_user(db=db, user=user, user_id=current_user.id)
 
-@router.delete("/delete_user", response_model=None)
+@router.delete("/me", response_model=None)
 async def delete_user(db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     await crud.delete_user(db=db, user_id=current_user.id)
     return {"message": "User deleted successfully"}

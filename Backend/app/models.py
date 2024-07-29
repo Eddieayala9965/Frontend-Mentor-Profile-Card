@@ -1,9 +1,10 @@
 import uuid
+from typing import List
 from sqlalchemy import Column, String, ForeignKey, Table
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, selectinload
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
@@ -18,35 +19,37 @@ user_social_media_links = Table(
 class User(Base):
     __tablename__ = 'users'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    profiles = relationship("Profile", back_populates="owner")  
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String)
+    profiles: Mapped[List['Profile']] = relationship("Profile", back_populates="owner", lazy="selectin")
 
 class Profile(Base):
     __tablename__ = 'profiles'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    bio = Column(String)
-    photo = Column(String)
-    address = Column(String)
-    owner_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    bio: Mapped[str] = mapped_column(String)
+    photo: Mapped[str] = mapped_column(String)
+    address: Mapped[str] = mapped_column(String)
+    owner_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id'))
     
-    owner = relationship("User", back_populates="profiles")
-    social_media_links = relationship(
+    owner: Mapped[User] = relationship("User", back_populates="profiles")
+    social_media_links: Mapped[List['SocialMediaLink']] = relationship(
         "SocialMediaLink",
         secondary=user_social_media_links,
-        back_populates="profiles"
+        back_populates="profiles",
+        lazy="selectin"
     )
-    
+
 class SocialMediaLink(Base):
     __tablename__ = 'social_media_links'
         
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    url = Column(String)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    url: Mapped[str] = mapped_column(String)
         
-    profiles = relationship(
+    profiles: Mapped[List['Profile']] = relationship(
         "Profile",
         secondary=user_social_media_links,
-        back_populates="social_media_links"
+        back_populates="social_media_links",
+        lazy="selectin"
     )

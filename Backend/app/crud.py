@@ -1,32 +1,24 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from . import models, schemas, security
 import uuid
 
 async def get_user(db: AsyncSession, user_id: uuid.UUID):
     result = await db.execute(
         select(models.User)
-        .options(joinedload(models.User.profiles).joinedload(models.Profile.social_media_links))
+        .options(selectinload(models.User.profiles).selectinload(models.Profile.social_media_links))
         .filter(models.User.id == user_id)
     )
-    user = result.scalars().first()
-    if user:
-        # Explicitly await the lazy-loaded attributes
-        await user.awaitable_attrs.profiles
-    return user
+    return result.scalars().first()
 
 async def get_user_by_username(db: AsyncSession, username: str):
     result = await db.execute(
         select(models.User)
-        .options(joinedload(models.User.profiles).joinedload(models.Profile.social_media_links))
+        .options(selectinload(models.User.profiles).selectinload(models.Profile.social_media_links))
         .filter(models.User.username == username)
     )
-    user = result.scalars().first()
-    if user:
-        # Explicitly await the lazy-loaded attributes
-        await user.awaitable_attrs.profiles
-    return user
+    return result.scalars().first()
 
 async def create_user(db: AsyncSession, user: schemas.UserCreate):
     hashed_password = security.get_password_hash(user.password)
@@ -62,12 +54,12 @@ async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_
     return db_profile
 
 async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profile_id: uuid.UUID):
-    db_profile = await db.execute(
+    result = await db.execute(
         select(models.Profile)
-        .options(joinedload(models.Profile.social_media_links))
+        .options(selectinload(models.Profile.social_media_links))
         .filter(models.Profile.id == profile_id)
     )
-    db_profile = db_profile.scalars().first()
+    db_profile = result.scalars().first()
     if db_profile:
         if profile.bio is not None:
             db_profile.bio = profile.bio
@@ -85,12 +77,12 @@ async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profi
     return db_profile
 
 async def delete_profile(db: AsyncSession, profile_id: uuid.UUID):
-    db_profile = await db.execute(
+    result = await db.execute(
         select(models.Profile)
-        .options(joinedload(models.Profile.social_media_links))
+        .options(selectinload(models.Profile.social_media_links))
         .filter(models.Profile.id == profile_id)
     )
-    db_profile = db_profile.scalars().first()
+    db_profile = result.scalars().first()
     if db_profile:
         await db.delete(db_profile)
         await db.commit()
@@ -98,7 +90,7 @@ async def delete_profile(db: AsyncSession, profile_id: uuid.UUID):
 async def get_profiles(db: AsyncSession, skip: int = 0, limit: int = 10):
     result = await db.execute(
         select(models.Profile)
-        .options(joinedload(models.Profile.social_media_links))
+        .options(selectinload(models.Profile.social_media_links))
         .offset(skip)
         .limit(limit)
     )
