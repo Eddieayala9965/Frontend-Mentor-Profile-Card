@@ -4,7 +4,7 @@ from pydantic import BaseModel, HttpUrl
 
 class SocialMediaLink(BaseModel):
     url: HttpUrl
-    id: uuid.UUID
+    id: Optional[uuid.UUID] = None
 
     class Config:
         from_attributes = True
