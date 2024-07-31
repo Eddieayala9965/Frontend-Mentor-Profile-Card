@@ -20,13 +20,24 @@ async def get_profiles(skip: int = 0, limit: int = 10, db: AsyncSession = Depend
     profiles = await crud.get_profiles(db, skip=skip, limit=limit)
     return profiles
 
-@router.put("/update_profile/{profile_id}", response_model=schemas.Profile)
-async def update_profile(profile_id: uuid.UUID, profile: schemas.ProfileUpdate, db: AsyncSession = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
-    db_profile = await crud.update_profile(db=db, profile=profile, profile_id=profile_id)
-    if not db_profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    return db_profile
+@router.put("/update_profile/{profile_id}/bio_and_address", response_model=schemas.Profile)
+async def update_profile_bio_and_address(
+    profile_id: uuid.UUID,
+    profile_update: schemas.ProfileUpdate,
+    db: AsyncSession = Depends(database.get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    profile = await crud.update_profile_bio_and_address(db=db, profile_id=profile_id, profile_update=profile_update)
+    return profile
 
-
-
-
+@router.put("/{profile_id}/social_media_links", response_model=schemas.Profile)
+async def update_social_media_links(
+    profile_id: uuid.UUID,
+    social_media_links: List[schemas.SocialMediaLink],
+    current_user: schemas.User = Depends(get_current_user), 
+    db: AsyncSession = Depends(database.get_db)
+):
+   
+    current_user = current_user
+    profile = await crud.update_social_media_links(db=db, profile_id=profile_id, social_media_links=social_media_links)
+    return profile

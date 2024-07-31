@@ -77,16 +77,13 @@ async def delete_user(db: AsyncSession, user_id: uuid.UUID):
         await db.commit()
         
 async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_id: uuid.UUID):
-    # Convert dictionaries to SocialMediaLink instances with URLs as strings
     social_media_links = [
         models.SocialMediaLink(url=str(link.url)) for link in profile.social_media_links
     ]
-  
-    photo_url = str(profile.photo)
-    
+
     db_profile = models.Profile(
         bio=profile.bio,
-        photo=photo_url,
+        photo=str(profile.photo) if profile.photo else None,
         address=profile.address,
         owner_id=user_id,
         social_media_links=social_media_links 
@@ -126,8 +123,29 @@ async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, soc
     return db_profile
 
 
+async def update_profile_bio_and_address(db: AsyncSession, profile_id: uuid.UUID, profile_update: schemas.ProfileUpdate):
+    db_profile = await db.execute(
+        select(models.Profile)
+        .filter(models.Profile.id == profile_id)
+    )
+    db_profile = db_profile.scalars().first()
+    
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    if profile_update.bio is not None:
+        db_profile.bio = profile_update.bio
+    if profile_update.address is not None:
+        db_profile.address = profile_update.address
 
-async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profile_id: uuid.UUID):
+    db.add(db_profile)
+    await db.commit()
+    await db.refresh(db_profile)
+    
+    return db_profile
+
+
+async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, social_media_links: List[schemas.SocialMediaLink]):
     db_profile = await db.execute(
         select(models.Profile)
         .options(joinedload(models.Profile.social_media_links))
@@ -137,21 +155,40 @@ async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profi
     if not db_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    if profile.bio is not None:
-        db_profile.bio = profile.bio
-    if profile.photo is not None:
-        db_profile.photo = str(profile.photo)  
-    if profile.address is not None:
-        db_profile.address = profile.address
+    existing_links = {link.id: link for link in db_profile.social_media_links}
+    updated_links = []
 
-    if profile.social_media_links is not None:
-        await update_social_media_links(db, profile_id, profile.social_media_links)
+    for link in social_media_links:
+        if link.id and link.id in existing_links:
+            existing_link = existing_links.pop(link.id)
+            existing_link.url = str(link.url)
+            updated_links.append(existing_link)
+        else:
+            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url))
+            db.add(new_link)
+            updated_links.append(new_link)
 
+    db_profile.social_media_links = updated_links
     db.add(db_profile)
     await db.commit()
     await db.refresh(db_profile)
     return db_profile
 
+
+
+async def update_profile_photo(db: AsyncSession, profile_id: uuid.UUID, photo_url: str):
+    db_profile = await db.execute(
+        select(models.Profile).filter(models.Profile.id == profile_id)
+    )
+    db_profile = db_profile.scalars().first()
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    db_profile.photo = photo_url
+    db.add(db_profile)
+    await db.commit()
+    await db.refresh(db_profile)
+    return db_profile
 
 
 

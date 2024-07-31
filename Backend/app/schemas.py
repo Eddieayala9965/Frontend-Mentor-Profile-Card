@@ -19,6 +19,7 @@ class ProfileCreate(ProfileBase):
 
 class ProfileUpdate(ProfileBase):
     social_media_links: Optional[List[SocialMediaLink]] = None
+    photo: Optional[HttpUrl] = None  
 
 class Profile(ProfileBase):
     id: uuid.UUID

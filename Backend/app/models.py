@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, selectinload
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 
@@ -26,13 +27,13 @@ class User(Base):
 
 class Profile(Base):
     __tablename__ = 'profiles'
-    
+
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     bio: Mapped[str] = mapped_column(String)
-    photo: Mapped[str] = mapped_column(String)
+    photo: Mapped[str] = mapped_column(String, nullable=True) 
     address: Mapped[str] = mapped_column(String)
     owner_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id'))
-    
+
     owner: Mapped[User] = relationship("User", back_populates="profiles")
     social_media_links: Mapped[List['SocialMediaLink']] = relationship(
         "SocialMediaLink",
