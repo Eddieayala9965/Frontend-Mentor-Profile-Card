@@ -1,3 +1,5 @@
+from sqlalchemy import select
+from . import models
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from .utils.s3_utils import upload_file_to_s3, create_presigned_url
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +12,6 @@ load_dotenv()
 
 app = FastAPI()
 
-# Add CORSMiddleware to enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5174", "http://localhost:5173"],
@@ -36,24 +37,21 @@ async def upload_file(
         file_url = upload_file_to_s3(file)
         if "error" in file_url:
             raise HTTPException(status_code=500, detail=file_url["error"])
-        
-        profile_data = schemas.ProfileCreate(
-            bio="This is a test bio",
-            photo=file_url,
-            address="123 Test Street",
-            social_media_links=[],
+
+        # Find the current user's profile
+        db_profile = await db.execute(
+            select(models.Profile).where(models.Profile.owner_id == current_user.id)
         )
-        profile = await crud.create_profile(db=db, profile=profile_data, user_id=current_user.id)
-        
-        return profile
+        db_profile = db_profile.scalars().first()
+
+        if db_profile:
+            db_profile.photo = file_url  
+            db.add(db_profile)
+            await db.commit()
+            await db.refresh(db_profile)
+            return db_profile
+        else:
+            raise HTTPException(status_code=404, detail="Profile not found")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/presigned_url/")
-def get_presigned_url(file_name: str):
-    url = create_presigned_url(bucket_name=os.getenv("AWS_BUCKET_NAME"), object_name=file_name)
-    if url:
-        return {"url": url}
-    else:
-        raise HTTPException(status_code=500, detail="Could not generate pre-signed URL")

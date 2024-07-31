@@ -96,6 +96,8 @@ async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_
     return db_profile
 
 
+
+
 async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profile_id: uuid.UUID):
     db_profile = await db.execute(
         select(models.Profile)
