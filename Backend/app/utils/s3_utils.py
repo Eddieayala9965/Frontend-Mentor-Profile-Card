@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
@@ -20,17 +19,20 @@ s3_client = boto3.client(
     region_name=AWS_REGION,
 )
 
-def upload_file_to_s3(file: UploadFile):
+def upload_file_to_s3(file: UploadFile, filename: str):
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+    )
+
     try:
-        file_extension = file.filename.split(".")[-1]
-        file_key = f"{uuid.uuid4()}.{file_extension}"
-        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file_key)
-        file_url = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{file_key}"
+        s3.upload_fileobj(file.file, os.getenv("AWS_BUCKET_NAME"), filename)
+        file_url = f"https://{os.getenv('AWS_BUCKET_NAME')}.s3.amazonaws.com/{filename}"
         return file_url
     except NoCredentialsError:
         return {"error": "Credentials not available"}
-    except Exception as e:
-        return {"error": str(e)}
+
 
 def create_presigned_url(bucket_name, object_name, expiration=3600):
     try:

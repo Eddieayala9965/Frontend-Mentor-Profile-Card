@@ -177,18 +177,18 @@ async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, soc
 
 
 async def update_profile_photo(db: AsyncSession, profile_id: uuid.UUID, photo_url: str):
-    db_profile = await db.execute(
+    result = await db.execute(
         select(models.Profile).filter(models.Profile.id == profile_id)
     )
-    db_profile = db_profile.scalars().first()
-    if not db_profile:
+    db_profile = result.scalars().first()
+    if db_profile:
+        db_profile.photo = photo_url
+        db.add(db_profile)
+        await db.commit()
+        await db.refresh(db_profile)
+        return db_profile
+    else:
         raise HTTPException(status_code=404, detail="Profile not found")
-
-    db_profile.photo = photo_url
-    db.add(db_profile)
-    await db.commit()
-    await db.refresh(db_profile)
-    return db_profile
 
 
 
