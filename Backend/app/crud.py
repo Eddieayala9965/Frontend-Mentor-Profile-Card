@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete
+from fastapi import HTTPException
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 from . import models, schemas, security
@@ -13,7 +14,7 @@ async def get_user(db: AsyncSession, user_id: uuid.UUID):
     )
     user = result.scalars().first()
     if user:
-        # Explicitly await the lazy-loaded attributes
+       
         await user.awaitable_attrs.profiles
     return user
 
@@ -25,7 +26,7 @@ async def get_user_by_username(db: AsyncSession, username: str):
     )
     user = result.scalars().first()
     if user:
-        # Explicitly await the lazy-loaded attributes
+       
         await user.awaitable_attrs.profiles
     return user
 
@@ -52,7 +53,7 @@ async def update_user(db: AsyncSession, user: schemas.UserUpdate, user_id: uuid.
 async def delete_user(db: AsyncSession, user_id: uuid.UUID):
     db_user = await get_user(db, user_id)
     if db_user:
-        # First, delete associated social media links
+       
         await db.execute(
             delete(models.user_social_media_links).where(models.user_social_media_links.c.profile_id.in_(
                 select(models.Profile.id).where(models.Profile.owner_id == user_id)
@@ -60,13 +61,11 @@ async def delete_user(db: AsyncSession, user_id: uuid.UUID):
         )
         await db.commit()
         
-        # Then delete associated profiles
         await db.execute(
             delete(models.Profile).where(models.Profile.owner_id == user_id)
         )
         await db.commit()
         
-        # Now delete the user
         await db.delete(db_user)
         await db.commit()
         
@@ -75,7 +74,7 @@ async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_
     social_media_links = [
         models.SocialMediaLink(url=str(link.url)) for link in profile.social_media_links
     ]
-    # Convert photo URL to string
+  
     photo_url = str(profile.photo)
     
     db_profile = models.Profile(
@@ -83,40 +82,13 @@ async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_
         photo=photo_url,
         address=profile.address,
         owner_id=user_id,
-        social_media_links=social_media_links  # Add the converted instances
+        social_media_links=social_media_links 
     )
     db.add(db_profile)
     await db.commit()
     await db.refresh(db_profile)
     return db_profile
 
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from . import models, schemas
-import uuid
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
-from . import models, schemas
-import uuid
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
-from . import models, schemas
-import uuid
-
-from sqlalchemy import select, update
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from . import models, schemas
-import uuid
 
 async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profile_id: uuid.UUID):
     db_profile = await db.execute(
@@ -131,7 +103,7 @@ async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profi
     if profile.bio is not None:
         db_profile.bio = profile.bio
     if profile.photo is not None:
-        db_profile.photo = str(profile.photo)  # Convert Url to string
+        db_profile.photo = str(profile.photo)  
     if profile.address is not None:
         db_profile.address = profile.address
 
@@ -155,8 +127,6 @@ async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profi
     await db.commit()
     await db.refresh(db_profile)
     return db_profile
-
-
 
 
 
