@@ -8,6 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 from . import models, schemas, security, database
 import uuid
+from typing import List  
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -95,6 +96,34 @@ async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_
     await db.refresh(db_profile)
     return db_profile
 
+async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, social_media_links: List[schemas.SocialMediaLink]):
+    db_profile = await db.execute(
+        select(models.Profile)
+        .options(joinedload(models.Profile.social_media_links))
+        .filter(models.Profile.id == profile_id)
+    )
+    db_profile = db_profile.scalars().first()
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    existing_links = {link.id: link for link in db_profile.social_media_links}
+    updated_links = []
+
+    for link in social_media_links:
+        if link.id and link.id in existing_links:
+            existing_link = existing_links.pop(link.id)
+            existing_link.url = str(link.url)
+            updated_links.append(existing_link)
+        else:
+            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url))
+            db.add(new_link)
+            updated_links.append(new_link)
+
+    db_profile.social_media_links = updated_links
+    db.add(db_profile)
+    await db.commit()
+    await db.refresh(db_profile)
+    return db_profile
 
 
 
@@ -116,25 +145,13 @@ async def update_profile(db: AsyncSession, profile: schemas.ProfileUpdate, profi
         db_profile.address = profile.address
 
     if profile.social_media_links is not None:
-        existing_links = {link.id: link for link in db_profile.social_media_links}
-        updated_links = []
-
-        for link in profile.social_media_links:
-            if link.id and link.id in existing_links:
-                existing_link = existing_links.pop(link.id)
-                existing_link.url = str(link.url)  
-                updated_links.append(existing_link)
-            else:
-                new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url))  
-                db.add(new_link)
-                updated_links.append(new_link)
-
-        db_profile.social_media_links = updated_links
+        await update_social_media_links(db, profile_id, profile.social_media_links)
 
     db.add(db_profile)
     await db.commit()
     await db.refresh(db_profile)
     return db_profile
+
 
 
 
