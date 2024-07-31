@@ -1,10 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete
-from fastapi import HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException, Depends
+from jose import JWTError, jwt
+import os
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
-from . import models, schemas, security
+from . import models, schemas, security, database
 import uuid
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 async def get_user(db: AsyncSession, user_id: uuid.UUID):
     result = await db.execute(
@@ -138,3 +144,23 @@ async def get_profiles(db: AsyncSession, skip: int = 0, limit: int = 10):
         .limit(limit)
     )
     return result.scalars().all()
+
+
+async def get_current_user(db: AsyncSession = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = await get_user_by_username(db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
