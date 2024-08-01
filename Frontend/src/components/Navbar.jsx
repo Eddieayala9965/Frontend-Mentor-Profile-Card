@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 const Navbar = () => {
   return (
-    <nav className=" container rounded-full h-14  bg-zinc-800 flex flex-col mt-3">
+    <nav className=" container rounded-full h-14 bg-zinc-800 flex flex-col mt-3">
       <div className=" mx-auto flex">
         <Link to="/profile" className="text-white p-4">
           Profile
