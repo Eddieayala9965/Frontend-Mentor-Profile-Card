@@ -38,12 +38,11 @@ async def upload_file(
 ):
     try:
         
-        filename = f"{profile_id}/{file.filename}"
+        filename = f"{profile_id}/profile_picture.{file.filename.split('.')[-1]}"
         file_url = upload_file_to_s3(file, filename)
         if "error" in file_url:
             raise HTTPException(status_code=500, detail=file_url["error"])
 
-        
         profile = await crud.update_profile_photo(db=db, profile_id=profile_id, photo_url=file_url)
         
         return profile
@@ -51,27 +50,7 @@ async def upload_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    
 
-@app.put("/uploadfile/{profile_id}", response_model=schemas.Profile)
-async def update_profile_picture(
-    profile_id: uuid.UUID,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(database.get_db),
-    current_user: schemas.User = Depends(get_current_user)
-):
-    try:
-        # Generate a consistent file name based on the profile ID
-        filename = f"{profile_id}/{file.filename}"
-        file_url = upload_file_to_s3(file, filename)
-        if "error" in file_url:
-            raise HTTPException(status_code=500, detail=file_url["error"])
 
-        # Update profile with new photo URL
-        db_profile = await crud.update_profile_photo(db=db, profile_id=profile_id, photo_url=file_url)
-        
-        return db_profile
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 

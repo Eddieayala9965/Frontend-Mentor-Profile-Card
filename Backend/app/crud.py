@@ -175,23 +175,6 @@ async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, soc
     return db_profile
 
 
-
-async def update_profile_photo(db: AsyncSession, profile_id: uuid.UUID, photo_url: str):
-    result = await db.execute(
-        select(models.Profile).filter(models.Profile.id == profile_id)
-    )
-    db_profile = result.scalars().first()
-    if db_profile:
-        db_profile.photo = photo_url
-        db.add(db_profile)
-        await db.commit()
-        await db.refresh(db_profile)
-        return db_profile
-    else:
-        raise HTTPException(status_code=404, detail="Profile not found")
-
-
-
 async def get_profiles(db: AsyncSession, skip: int = 0, limit: int = 10):
     result = await db.execute(
         select(models.Profile)
@@ -199,7 +182,8 @@ async def get_profiles(db: AsyncSession, skip: int = 0, limit: int = 10):
         .offset(skip)
         .limit(limit)
     )
-    return result.scalars().all()
+    profiles = result.unique().scalars().all()
+    return profiles
 
 
 async def get_current_user(db: AsyncSession = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
@@ -219,4 +203,9 @@ async def get_current_user(db: AsyncSession = Depends(database.get_db), token: s
     user = await get_user_by_username(db, username=token_data.username)
     if user is None:
         raise credentials_exception
+    
+    
+    await db.execute(f"SET app.current_user_id = '{user.id}';")
+    await db.commit()
+
     return user
