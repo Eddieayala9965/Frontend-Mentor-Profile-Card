@@ -37,13 +37,13 @@ async def upload_file(
     current_user: schemas.User = Depends(get_current_user)
 ):
     try:
-        # Generate a consistent file name based on the profile ID
+        
         filename = f"{profile_id}/{file.filename}"
         file_url = upload_file_to_s3(file, filename)
         if "error" in file_url:
             raise HTTPException(status_code=500, detail=file_url["error"])
 
-        # Update profile with new photo URL
+        
         profile = await crud.update_profile_photo(db=db, profile_id=profile_id, photo_url=file_url)
         
         return profile
