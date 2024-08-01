@@ -58,7 +58,7 @@ async def register(user: schemas.UserCreate, db: AsyncSession = Depends(database
         raise HTTPException(status_code=400, detail="Username already registered")
     return await crud.create_user(db=db, user=user)
 
-@router.post("/token", response_model=schemas.Token)
+@router.post("/login", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(database.get_db)):
     user = await crud.get_user_by_username(db, username=form_data.username)
     if not user or not security.verify_password(form_data.password, user.hashed_password):
