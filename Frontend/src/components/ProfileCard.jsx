@@ -6,9 +6,9 @@ const ProfileCard = ({ user }) => {
   const profile = user.profiles[0];
 
   return (
-    <div className=" w-96 h-full mx-auto p-6 rounded-xl bg-zinc-800 text-white flex flex-col items-center">
+    <div className=" w-2/6 h-[90vh] mx-auto p-6 rounded-xl bg-zinc-900 text-white flex flex-col items-center">
       <Avatar
-        className="w-24 h-24 rounded-full mb-4"
+        className="w-24 h-24 rounded-full mb-6 mt-4"
         src={profile.photo}
         alt="Profile"
         onError={(e) => {
@@ -17,25 +17,26 @@ const ProfileCard = ({ user }) => {
         }}
         sx={{ width: 96, height: 96 }}
       />
-      <h2 className="text-2xl text-center  font-bold mb-2">{user.username}</h2>
+      <h2 className="text-2xl text-center  font-bold mb-3">{user.username}</h2>
       <div className="flex flex-col gap-5">
         {profile.address && (
-          <p className="text-center text-lime-300">{profile.address}</p>
+          <p className="text-center text-lime-300 mb-2">{profile.address}</p>
         )}
-        <p className="text-center">{profile.bio}</p>
+        <p className="text-center text-md font-light mb-7">{profile.bio}</p>
       </div>
-      <div className="h-52 flex flex-col justify-center gap-4">
+      <div className="h-64 flex flex-col justify-center mt-14">
         {profile.social_media_links && profile.social_media_links.length > 0 ? (
           profile.social_media_links.map((link) => (
-            <a
+            <ul
               key={link.id}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400"
+              className="mt-6 text-center bg-zinc-800 h-44 w-96 rounded-lg p-4"
             >
-              {link.name}
-            </a>
+              <li className="flex flex-col gap-4">
+                <a href={link.url} className="text-white font-bold">
+                  {link.name}
+                </a>
+              </li>
+            </ul>
           ))
         ) : (
           <p>No social media links available</p>
