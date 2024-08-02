@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login } from "../services/authService";
 import {
   TextField,
@@ -18,8 +17,8 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [open, setOpen] = useState(false);
-
   const navigate = useNavigate();
 
   const theme = createTheme({
@@ -39,7 +38,7 @@ const LoginForm = () => {
             "& .MuiInputLabel-root": {
               color: "gray",
               "&.Mui-focused": {
-                color: "red",
+                color: "gray",
               },
             },
           },
@@ -51,15 +50,22 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     try {
       const response = await login(username, password);
-      if (response.ok) {
-        navigate("/profile");
+      console.log("Login response:", response.data);
+      if (response.status === 200) {
+        setSuccess("Login successful");
+        setOpen(true);
+        setTimeout(() => {
+          navigate("/profile");
+        }, 2000);
+      } else {
+        setError("Login failed. Please check your credentials.");
+        setOpen(true);
       }
     } catch (err) {
-      setError(
-        "Failed to log in. Please check your credentials and try again."
-      );
+      setError("Login failed. Please check your credentials.");
       setOpen(true);
     }
   };
@@ -172,12 +178,16 @@ const LoginForm = () => {
           </Button>
         </form>
         <p className="text-white text-left mt-3">
-          Dont have an account? <Link to={"/signup"}>Sign Up</Link>
+          Don't have an account? <Link to={"/register"}>Sign Up</Link>
         </p>
       </ThemeProvider>
       <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
-          {error}
+        <Alert
+          onClose={handleClose}
+          severity={error ? "error" : "success"}
+          sx={{ width: "100%" }}
+        >
+          {error || success}
         </Alert>
       </Snackbar>
     </div>

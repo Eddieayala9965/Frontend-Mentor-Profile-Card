@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { signup } from "../services/authService";
 import {
   TextField,
@@ -55,10 +54,16 @@ const SignUpForm = () => {
     setSuccess("");
     try {
       const response = await signup(username, password);
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         setSuccess("Registration successful");
         setOpen(true);
-        navigate("/profile");
+        e;
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        setError("Failed to sign up. Please try again.");
+        setOpen(true);
       }
     } catch (err) {
       setError("Failed to sign up. Please try again.");
@@ -174,7 +179,7 @@ const SignUpForm = () => {
           </Button>
         </form>
         <p className="text-white text-left mt-3">
-          Already have an account ? <Link to={"/login"}>Log In</Link>
+          Already have an account? <Link to={"/login"}>Log In</Link>
         </p>
       </ThemeProvider>
       <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
