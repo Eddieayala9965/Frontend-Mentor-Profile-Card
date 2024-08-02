@@ -18,8 +18,8 @@ module.exports = {
     },
     extend: {
       screens: {
-        "md-sm": "1030px",
-        "lg-md": "1219px",
+        mdsm: "1030px",
+        lgmd: "1200px",
         xm: "500px",
         xxm: "300px",
       },

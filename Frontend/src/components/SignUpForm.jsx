@@ -83,7 +83,7 @@ const SignUpForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 rounded-xl bg-zinc-800 flex flex-col text-center ">
+    <div className="max-w-md mx-auto mt-10 p-6 rounded-xl bg-zinc-800 flex flex-col text-center xxm:w-3/4 ">
       <h2 className="text-2xl font-bold mb-6 text-white">Sign Up</h2>
       <ThemeProvider theme={theme}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">

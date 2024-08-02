@@ -6,7 +6,7 @@ const ProfileCard = ({ user }) => {
   const profile = user.profiles[0];
 
   return (
-    <div className="max-w-screen-sm xxm:w-4/5 xm:w-2/3 sm:w-2/3 w-full md:w-3/6 lg:w-2/6 h-auto md:h-[90vh] mx-auto p-6 rounded-xl bg-zinc-900 text-white flex flex-col items-center">
+    <div className=" xxm:w-4/5 xm:w-2/3 sm:w-2/3 w-full md:w-3/6 mdsm:w-2/5 lgmd:w-1/3 lg:w-2/6 h-auto md:h-[90vh] mx-auto p-6 rounded-xl bg-zinc-900 text-white flex flex-col items-center">
       <AvatarUpload profileId={profile.id} currentPhoto={profile.photo} />
       <h2 className="text-2xl text-center font-bold mb-3">{user.username}</h2>
       <div className="flex flex-col gap-5 w-full">
