@@ -24,6 +24,26 @@ export const getUser = () => {
   });
 };
 
+export const createProfile = (profileData) => {
+  return api.post("/profiles/create_profile", profileData, {
+    headers: {
+      Authorization: `Bearer ${Cookies.get("token")}`,
+    },
+  });
+};
+
+export const uploadProfilePicture = (profileId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return api.post(`/uploadfile/${profileId}`, formData, {
+    headers: {
+      Authorization: `Bearer ${Cookies.get("token")}`,
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
 api.interceptors.request.use(
   (config) => {
     const token = Cookies.get("token");

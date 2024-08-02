@@ -1,35 +1,26 @@
-import React from "react";
 import PropTypes from "prop-types";
 import Avatar from "@mui/material/Avatar";
+import AvatarUpload from "./AvatarUpload";
 
 const ProfileCard = ({ user }) => {
   const profile = user.profiles[0];
 
   return (
-    <div className=" w-2/6 h-[90vh] mx-auto p-6 rounded-xl bg-zinc-900 text-white flex flex-col items-center">
-      <Avatar
-        className="w-24 h-24 rounded-full mb-6 mt-4"
-        src={profile.photo}
-        alt="Profile"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = "https://via.placeholder.com/150";
-        }}
-        sx={{ width: 96, height: 96 }}
-      />
-      <h2 className="text-2xl text-center  font-bold mb-3">{user.username}</h2>
-      <div className="flex flex-col gap-5">
+    <div className="max-w-screen-sm xxm:w-4/5 xm:w-2/3 sm:w-2/3 w-full md:w-3/6 lg:w-2/6 h-auto md:h-[90vh] mx-auto p-6 rounded-xl bg-zinc-900 text-white flex flex-col items-center">
+      <AvatarUpload profileId={profile.id} currentPhoto={profile.photo} />
+      <h2 className="text-2xl text-center font-bold mb-3">{user.username}</h2>
+      <div className="flex flex-col gap-5 w-full">
         {profile.address && (
           <p className="text-center text-lime-300 mb-2">{profile.address}</p>
         )}
         <p className="text-center text-md font-light mb-7">{profile.bio}</p>
       </div>
-      <div className="h-64 flex flex-col justify-center mt-14">
+      <div className="flex flex-col justify-center w-full">
         {profile.social_media_links && profile.social_media_links.length > 0 ? (
           profile.social_media_links.map((link) => (
             <ul
               key={link.id}
-              className="mt-6 text-center bg-zinc-800 h-44 w-96 rounded-lg p-4"
+              className="mt-6 text-center bg-zinc-800 h-auto w-full max-w-xs lg:max-w-md rounded-lg p-4 mx-auto"
             >
               <li className="flex flex-col gap-4">
                 <a href={link.url} className="text-white font-bold">
@@ -52,6 +43,7 @@ ProfileCard.propTypes = {
     profiles: PropTypes.arrayOf(
       PropTypes.shape({
         photo: PropTypes.string,
+        address: PropTypes.string,
         bio: PropTypes.string,
         social_media_links: PropTypes.arrayOf(
           PropTypes.shape({
