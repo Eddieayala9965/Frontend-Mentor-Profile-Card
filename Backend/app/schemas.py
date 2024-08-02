@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel, HttpUrl
 
 class SocialMediaLink(BaseModel):
+    name: Optional[str] = None  
     url: HttpUrl
     id: Optional[uuid.UUID] = None
 
