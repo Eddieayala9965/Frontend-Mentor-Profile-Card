@@ -1,15 +1,27 @@
 import { useState } from "react";
-import api from "../services/api";
-import { signup } from "../services/authService";
-import { TextField } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { signup } from "../services/authService";
+import {
+  TextField,
+  Button,
+  Snackbar,
+  Alert,
+  IconButton,
+  InputAdornment,
+} from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const SignUpForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   const theme = createTheme({
     components: {
@@ -45,19 +57,24 @@ const SignUpForm = () => {
       const response = await signup(username, password);
       if (response.ok) {
         setSuccess("Registration successful");
-        window.location.href("/profile");
+        setOpen(true);
+        navigate("/profile");
       }
-    } catch (error) {
-      console.error("failed to sign up. Please try again");
+    } catch (err) {
+      setError("Failed to sign up. Please try again.");
+      setOpen(true);
     }
   };
 
-  const handleChangeUser = (e) => {
-    setUsername(e.target.value);
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpen(false);
   };
 
-  const handleChangePass = (e) => {
-    setPassword(e.target.value);
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -74,7 +91,7 @@ const SignUpForm = () => {
               value={username}
               required
               fullWidth
-              onChange={handleChangeUser}
+              onChange={(e) => setUsername(e.target.value)}
               sx={{
                 backgroundColor: "white",
                 borderRadius: 1,
@@ -101,13 +118,26 @@ const SignUpForm = () => {
           <div>
             <TextField
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               id="password"
               value={password}
               required
               fullWidth
-              onChange={handleChangePass}
+              onChange={(e) => setPassword(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
               sx={{
                 backgroundColor: "white",
                 borderRadius: 1,
@@ -131,11 +161,31 @@ const SignUpForm = () => {
               }}
             />
           </div>
+          <Button
+            type="submit"
+            sx={{
+              color: "white",
+              fontFamily: "inherit",
+              backgroundColor: "transparent",
+              "&:hover": { backgroundColor: "transparent" },
+            }}
+          >
+            Submit
+          </Button>
         </form>
         <p className="text-white text-left mt-3">
           Already have an account ? <Link to={"/login"}>Log In</Link>
         </p>
       </ThemeProvider>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert
+          onClose={handleClose}
+          severity={error ? "error" : "success"}
+          sx={{ width: "100%" }}
+        >
+          {error || success}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
