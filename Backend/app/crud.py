@@ -78,12 +78,14 @@ async def delete_user(db: AsyncSession, user_id: uuid.UUID):
         
 async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_id: uuid.UUID):
     social_media_links = [
-        models.SocialMediaLink(url=str(link.url)) for link in profile.social_media_links
+        models.SocialMediaLink(name=link.name, url=str(link.url)) for link in profile.social_media_links
     ]
-
+  
+    photo_url = str(profile.photo) if profile.photo else None
+    
     db_profile = models.Profile(
         bio=profile.bio,
-        photo=str(profile.photo) if profile.photo else None,
+        photo=photo_url,
         address=profile.address,
         owner_id=user_id,
         social_media_links=social_media_links 
@@ -92,6 +94,7 @@ async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_
     await db.commit()
     await db.refresh(db_profile)
     return db_profile
+
 
 async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, social_media_links: List[schemas.SocialMediaLink]):
     db_profile = await db.execute(
@@ -161,10 +164,11 @@ async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, soc
     for link in social_media_links:
         if link.id and link.id in existing_links:
             existing_link = existing_links.pop(link.id)
+            existing_link.name = link.name
             existing_link.url = str(link.url)
             updated_links.append(existing_link)
         else:
-            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url))
+            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), name=link.name, url=str(link.url))
             db.add(new_link)
             updated_links.append(new_link)
 
@@ -173,7 +177,6 @@ async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, soc
     await db.commit()
     await db.refresh(db_profile)
     return db_profile
-
 
 async def get_profiles(db: AsyncSession, skip: int = 0, limit: int = 10):
     result = await db.execute(
@@ -185,6 +188,14 @@ async def get_profiles(db: AsyncSession, skip: int = 0, limit: int = 10):
     profiles = result.unique().scalars().all()
     return profiles
 
+
+from fastapi import HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from jose import JWTError, jwt
+import os
+from . import schemas, database, crud
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 async def get_current_user(db: AsyncSession = Depends(database.get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -200,12 +211,40 @@ async def get_current_user(db: AsyncSession = Depends(database.get_db), token: s
         token_data = schemas.TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = await get_user_by_username(db, username=token_data.username)
+    user = await crud.get_user_by_username(db, username=token_data.username)
     if user is None:
         raise credentials_exception
     
-    
-    await db.execute(f"SET app.current_user_id = '{user.id}';")
-    await db.commit()
+    try:
+        await db.execute(f"SET app.current_user_id = '{user.id}';")
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error setting current user ID: {str(e)}")
 
     return user
+
+
+
+async def update_profile_photo(db: AsyncSession, profile_id: uuid.UUID, photo_url: str):
+    db_profile = await db.execute(
+        select(models.Profile).filter(models.Profile.id == profile_id)
+    )
+    db_profile = db_profile.scalars().first()
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    db_profile.photo = photo_url
+    db.add(db_profile)
+    await db.commit()
+    await db.refresh(db_profile)
+    return db_profile
+
+async def get_profile_by_id(db: AsyncSession, profile_id: uuid.UUID):
+    result = await db.execute(
+        select(models.Profile).filter(models.Profile.id == profile_id)
+    )
+    return result.scalars().first()
+
+
+
