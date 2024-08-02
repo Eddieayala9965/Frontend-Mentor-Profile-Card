@@ -18,11 +18,6 @@ export const signup = async (username, password) => {
   return response;
 };
 
-export const getProfile = async () => {
-  const response = await api.get("/profiles/get_profiles");
-  return response.data;
-};
-
 export const logout = () => {
   localStorage.removeItem("token");
   window.location.href = "/login";

@@ -1,10 +1,28 @@
+import React, { useEffect, useState } from "react";
 import ProfileCard from "../components/ProfileCard";
+import { getUser } from "../services/api";
 
 const Profile = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await getUser();
+        setUser(response.data);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  if (!user) return <div>Loading...</div>;
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl mb-4 text-white">Profile Page</h1>
-      <ProfileCard />
+    <div className="min-h-screen bg-black flex justify-center items-center">
+      <ProfileCard user={user} />
     </div>
   );
 };

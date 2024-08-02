@@ -8,6 +8,22 @@ const api = axios.create({
   },
 });
 
+export const getProfile = () => {
+  return api.get("/profiles/get_profiles", {
+    headers: {
+      Authorization: `Bearer ${Cookies.get("token")}`,
+    },
+  });
+};
+
+export const getUser = () => {
+  return api.get("/users/get_user", {
+    headers: {
+      Authorization: `Bearer ${Cookies.get("token")}`,
+    },
+  });
+};
+
 api.interceptors.request.use(
   (config) => {
     const token = Cookies.get("token");
