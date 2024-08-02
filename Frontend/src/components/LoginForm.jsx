@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import Cookies from "js-cookie";
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
@@ -53,8 +54,9 @@ const LoginForm = () => {
     setSuccess("");
     try {
       const response = await login(username, password);
-      console.log("Login response:", response.data);
+      console.log(response);
       if (response.status === 200) {
+        Cookies.set("token", response.data.access_token);
         setSuccess("Login successful");
         setOpen(true);
         setTimeout(() => {
@@ -94,6 +96,7 @@ const LoginForm = () => {
               id="username"
               value={username}
               required
+              autoComplete="username"
               fullWidth
               onChange={(e) => setUsername(e.target.value)}
               sx={{
@@ -127,6 +130,7 @@ const LoginForm = () => {
               id="password"
               value={password}
               required
+              autoComplete="current-password"
               fullWidth
               onChange={(e) => setPassword(e.target.value)}
               InputProps={{
@@ -178,7 +182,7 @@ const LoginForm = () => {
           </Button>
         </form>
         <p className="text-white text-left mt-3">
-          Don't have an account? <Link to={"/register"}>Sign Up</Link>
+          Dont have an account? <Link to={"/register"}>Sign Up</Link>
         </p>
       </ThemeProvider>
       <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>

@@ -95,6 +95,7 @@ const SignUpForm = () => {
               id="username"
               value={username}
               required
+              autoComplete="username"
               fullWidth
               onChange={(e) => setUsername(e.target.value)}
               sx={{
@@ -128,6 +129,7 @@ const SignUpForm = () => {
               id="password"
               value={password}
               required
+              autoComplete="current-password"
               fullWidth
               onChange={(e) => setPassword(e.target.value)}
               InputProps={{
