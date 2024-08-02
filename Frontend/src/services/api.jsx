@@ -44,6 +44,34 @@ export const uploadProfilePicture = (profileId, file) => {
   });
 };
 
+export const updateUser = (userId, data) => {
+  return api.put(`/users/${userId}`, data, {
+    headers: {
+      Authorization: `Bearer ${Cookies.get("token")}`,
+    },
+  });
+};
+
+export const updateProfile = (profileId, profileData) => {
+  return api.put(
+    `/profiles/update_profile/${profileId}/bio_and_address`,
+    profileData,
+    {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("token")}`,
+      },
+    }
+  );
+};
+
+export const updateSocialMediaLinks = (profileId, data) => {
+  return api.put(`/profiles/${profileId}/social_media_links`, data, {
+    headers: {
+      Authorization: `Bearer ${Cookies.get("token")}`,
+    },
+  });
+};
+
 api.interceptors.request.use(
   (config) => {
     const token = Cookies.get("token");

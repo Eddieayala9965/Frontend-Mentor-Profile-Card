@@ -29,7 +29,7 @@ const Profile = () => {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-black flex justify-center items-center">
+    <div className="min-h-screen bg-black flex justify-center items-center flex-col gap-5 mt-5">
       {user && user.profiles && user.profiles.length > 0 ? (
         <ProfileCard user={user} />
       ) : (
