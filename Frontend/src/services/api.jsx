@@ -44,12 +44,21 @@ export const uploadProfilePicture = (profileId, file) => {
   });
 };
 
-export const updateUser = (userId, data) => {
-  return api.put(`/users/${userId}`, data, {
-    headers: {
-      Authorization: `Bearer ${Cookies.get("token")}`,
-    },
-  });
+export const updateSocialMediaLinks = (profileId, socialMediaLinks) => {
+  console.log("Making API call with data:", socialMediaLinks);
+  return api.put(
+    `/profiles/${profileId}/social_media_links`,
+    socialMediaLinks, // Send the list directly
+    {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("token")}`,
+      },
+    }
+  );
+};
+
+export const updateUser = (userId, userData) => {
+  return api.put(`/users/update_user/${userId}`, userData);
 };
 
 export const updateProfile = (profileId, profileData) => {
@@ -62,14 +71,6 @@ export const updateProfile = (profileId, profileData) => {
       },
     }
   );
-};
-
-export const updateSocialMediaLinks = (profileId, data) => {
-  return api.put(`/profiles/${profileId}/social_media_links`, data, {
-    headers: {
-      Authorization: `Bearer ${Cookies.get("token")}`,
-    },
-  });
 };
 
 api.interceptors.request.use(
