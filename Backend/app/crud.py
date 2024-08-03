@@ -96,33 +96,45 @@ async def create_profile(db: AsyncSession, profile: schemas.ProfileCreate, user_
     return db_profile
 
 
+import logging
+
 async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, social_media_links: List[schemas.SocialMediaLink]):
+    logging.info(f"Updating social media links for profile ID: {profile_id}")
+
     db_profile = await db.execute(
         select(models.Profile)
         .options(joinedload(models.Profile.social_media_links))
         .filter(models.Profile.id == profile_id)
     )
     db_profile = db_profile.scalars().first()
+
     if not db_profile:
+        logging.error(f"Profile ID {profile_id} not found")
         raise HTTPException(status_code=404, detail="Profile not found")
 
     existing_links = {link.id: link for link in db_profile.social_media_links}
     updated_links = []
 
+    logging.info(f"Existing social media links: {existing_links.keys()}")
+
     for link in social_media_links:
         if link.id and link.id in existing_links:
             existing_link = existing_links.pop(link.id)
             existing_link.url = str(link.url)
+            existing_link.name = str(link.name)  # Add this line to update the name
             updated_links.append(existing_link)
+            logging.info(f"Updated existing link: {link.id}")
         else:
-            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url))
+            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url), name=str(link.name))  # Add name here as well
             db.add(new_link)
             updated_links.append(new_link)
+            logging.info(f"Added new link: {new_link.id}")
 
     db_profile.social_media_links = updated_links
     db.add(db_profile)
     await db.commit()
     await db.refresh(db_profile)
+    logging.info(f"Social media links updated successfully for profile ID: {profile_id}")
     return db_profile
 
 
@@ -148,35 +160,6 @@ async def update_profile_bio_and_address(db: AsyncSession, profile_id: uuid.UUID
     return db_profile
 
 
-async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, social_media_links: List[schemas.SocialMediaLink]):
-    db_profile = await db.execute(
-        select(models.Profile)
-        .options(joinedload(models.Profile.social_media_links))
-        .filter(models.Profile.id == profile_id)
-    )
-    db_profile = db_profile.scalars().first()
-    if not db_profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
-
-    existing_links = {link.id: link for link in db_profile.social_media_links}
-    updated_links = []
-
-    for link in social_media_links:
-        if link.id and link.id in existing_links:
-            existing_link = existing_links.pop(link.id)
-            existing_link.name = link.name
-            existing_link.url = str(link.url)
-            updated_links.append(existing_link)
-        else:
-            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), name=link.name, url=str(link.url))
-            db.add(new_link)
-            updated_links.append(new_link)
-
-    db_profile.social_media_links = updated_links
-    db.add(db_profile)
-    await db.commit()
-    await db.refresh(db_profile)
-    return db_profile
 
 async def get_profiles(db: AsyncSession, skip: int = 0, limit: int = 10):
     result = await db.execute(

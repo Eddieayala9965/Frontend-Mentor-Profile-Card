@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import uuid
+from ..schemas import SocialMediaLink
 
 from .. import crud, schemas, database
 from .users import get_current_user
@@ -33,7 +34,7 @@ async def update_profile_bio_and_address(
 @router.put("/{profile_id}/social_media_links", response_model=schemas.Profile)
 async def update_social_media_links(
     profile_id: uuid.UUID,
-    social_media_links: List[schemas.SocialMediaLink],
+    social_media_links: List[SocialMediaLink],
     current_user: schemas.User = Depends(get_current_user), 
     db: AsyncSession = Depends(database.get_db)
 ):
