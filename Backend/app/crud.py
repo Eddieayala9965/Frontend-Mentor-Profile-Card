@@ -121,11 +121,11 @@ async def update_social_media_links(db: AsyncSession, profile_id: uuid.UUID, soc
         if link.id and link.id in existing_links:
             existing_link = existing_links.pop(link.id)
             existing_link.url = str(link.url)
-            existing_link.name = str(link.name)  # Add this line to update the name
+            existing_link.name = str(link.name)  
             updated_links.append(existing_link)
             logging.info(f"Updated existing link: {link.id}")
         else:
-            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url), name=str(link.name))  # Add name here as well
+            new_link = models.SocialMediaLink(id=link.id or uuid.uuid4(), url=str(link.url), name=str(link.name))  
             db.add(new_link)
             updated_links.append(new_link)
             logging.info(f"Added new link: {new_link.id}")
