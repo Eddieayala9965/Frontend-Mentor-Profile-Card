@@ -21,12 +21,14 @@ const ProfileCard = ({ user }) => {
         >
           Update User
         </button>
+
         <button
           onClick={() => setProfileModalOpen(true)}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Update Profile
         </button>
+
         <button
           onClick={() => setSocialMediaModalOpen(true)}
           className="bg-blue-500 text-white px-4 py-2 rounded"
@@ -34,7 +36,6 @@ const ProfileCard = ({ user }) => {
           Update Social Media Links
         </button>
       </div>
-
       <div className="xxm:w-4/5 xm:w-2/3 sm:w-2/3 w-full md:w-3/6 mdsm:w-2/5 lgmd:w-1/3 lg:w-2/6 h-auto md:h-[90vh] mx-auto p-6 rounded-xl bg-zinc-900 text-white flex flex-col items-center">
         <AvatarUpload profileId={profile.id} currentPhoto={profile.photo} />
         <h2 className="text-2xl text-center font-bold mb-3">{user.username}</h2>
@@ -42,8 +43,10 @@ const ProfileCard = ({ user }) => {
           {profile.address && (
             <p className="text-center text-lime-300 mb-2">{profile.address}</p>
           )}
+
           <p className="text-center text-md font-light mb-7">{profile.bio}</p>
         </div>
+
         <div className="flex flex-col justify-center w-full">
           {profile.social_media_links &&
           profile.social_media_links.length > 0 ? (
@@ -60,7 +63,7 @@ const ProfileCard = ({ user }) => {
               </ul>
             ))
           ) : (
-            <p>No social media links available</p>
+            <p className="text-center">No social media links available</p>
           )}
         </div>
       </div>
@@ -95,10 +98,11 @@ const ProfileCard = ({ user }) => {
 
 ProfileCard.propTypes = {
   user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     profiles: PropTypes.arrayOf(
       PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.string.isRequired,
         photo: PropTypes.string,
         address: PropTypes.string,
         bio: PropTypes.string,
